@@ -59,11 +59,18 @@ jobs:
   VisualStudio:
     if: github.event_name != 'schedule' || github.repository == 'mesonbuild/wrapdb'
     runs-on: windows-latest
-    name: Running ${{ matrix.compiler }} on ${{ matrix.platform }} platform
+    name: Build ${{ matrix.compiler }} on ${{ matrix.platform }} system
     strategy:
       matrix:
-        compiler: ['Visual Studio 2015', 'Visual Studio 2017', 'Visual Studio 2019', 'Visual Studio 2022']
-        platform: ['x64', 'x86']
+        compiler:
+          - 'Visual Studio 2015'
+          - 'Visual Studio 2017'
+          - 'Visual Studio 2019'
+          - 'Visual Studio 2022'
+          - 'VisualStudio-clang-cl'
+        platform:
+          - 'x64'
+          - 'x86'
     env:
       TEST_BUILD_ALL: 1
       TEST_FATAL_WARNINGS: ${{ github.event.inputs.fatal_warnings }}
@@ -87,30 +94,15 @@ jobs:
             call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" %{{ matrix.platform }}
           ) else if "%{{ matrix.compiler }}" == "Visual Studio 2022" (
             call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" %{{ matrix.platform }}
+          ) else if "%{{ matrix.compiler }}" == "VisualStudio-clang-cl" (
+            set CC=clang-cl
+            set CXX=clang-cl
+            set VCToolsInstallDir=C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910
+            set PATH=%VCToolsInstallDir%\bin\Hostx64\x64;%PATH%
           )
 
-      - name: Sanity Checks
-        run: |
-          python tools/sanity_checks.py
-
-  VisualStudio-clang-cl:
-    if: github.event_name != 'schedule' || github.repository == 'mesonbuild/wrapdb'
-    runs-on: windows-latest
-    env:
-      CC: clang-cl
-      CXX: clang-cl
-      TEST_BUILD_ALL: 1
-      TEST_FATAL_WARNINGS: ${{ github.event.inputs.fatal_warnings }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install packages
-        run: |
-          python -m pip install git+https://github.com/mesonbuild/meson
-
       - uses: ilammy/msvc-dev-cmd@v1
+
       - name: Sanity Checks
         run: |
           python tools/sanity_checks.py
