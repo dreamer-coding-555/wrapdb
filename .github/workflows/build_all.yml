@@ -13,7 +13,10 @@ on:
 jobs:
   Ubuntu:
     if: github.event_name != 'schedule' || github.repository == 'mesonbuild/wrapdb'
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
     env:
       TEST_BUILD_ALL: 1
       TEST_FATAL_WARNINGS: ${{ github.event.inputs.fatal_warnings }}
